@@ -1,0 +1,144 @@
+<Layouts.flash_group flash={@flash} />
+
+<!-- Hero Section -->
+<div class="relative isolate overflow-hidden bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5 min-h-screen">
+  <div class="absolute inset-0 -z-10">
+    <div class="absolute left-[50%] top-0 -translate-x-1/2 blur-3xl xl:left-[60%]" aria-hidden="true">
+      <div class="aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-primary to-secondary opacity-10" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
+    </div>
+  </div>
+  
+  <div class="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-40">
+    <div class="mx-auto max-w-2xl flex-shrink-0 lg:mx-0 lg:max-w-xl lg:pt-8">
+      <h1 class="mt-10 text-4xl font-bold tracking-tight sm:text-6xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        TodoApp SaaS
+      </h1>
+      <p class="mt-6 text-lg leading-8 text-base-content/70">
+        タスク管理を革新する、次世代のTodoアプリケーション。チームでの協働から個人の生産性向上まで、あなたの仕事を効率化します。
+      </p>
+      <div class="mt-10 flex items-center gap-x-6">
+        <%= if @current_scope do %>
+          <a href="/todos" class="btn btn-primary btn-lg">
+            ダッシュボードへ
+          </a>
+          <a href="/users/settings" class="btn btn-ghost btn-lg">
+            設定
+          </a>
+        <% else %>
+          <a href="/users/register" class="btn btn-primary btn-lg">
+            無料で始める
+          </a>
+          <a href="/users/log-in" class="btn btn-ghost btn-lg">
+            ログイン
+          </a>
+        <% end %>
+      </div>
+    </div>
+    
+    <div class="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mr-0 lg:mt-0 lg:max-w-none lg:flex-none xl:ml-20">
+      <div class="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
+        <img 
+          src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&auto=format&fit=crop&q=80"
+          alt="App screenshot" 
+          class="w-[76rem] rounded-xl shadow-2xl ring-1 ring-base-300"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<div class="py-24 sm:py-32 bg-base-200/30">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class="text-base font-semibold leading-7 text-primary">機能</h2>
+      <p class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+        生産性を最大化する機能群
+      </p>
+      <p class="mt-6 text-lg leading-8 text-base-content/70">
+        シンプルで使いやすく、かつ強力な機能を備えたTodoアプリケーションです。
+      </p>
+    </div>
+    
+    <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+      <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+        <div class="flex flex-col">
+          <dt class="text-base font-semibold leading-7">
+            <div class="mb-6 flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+              <svg class="h-6 w-6 text-primary-content" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            リアルタイム同期
+          </dt>
+          <dd class="mt-1 flex flex-auto flex-col text-base leading-7 text-base-content/70">
+            <p class="flex-auto">
+              Phoenix LiveViewによるリアルタイム更新で、チーム全員が常に最新の状態を共有できます。
+            </p>
+          </dd>
+        </div>
+        
+        <div class="flex flex-col">
+          <dt class="text-base font-semibold leading-7">
+            <div class="mb-6 flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+              <svg class="h-6 w-6 text-primary-content" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+            </div>
+            セキュアな認証
+          </dt>
+          <dd class="mt-1 flex flex-auto flex-col text-base leading-7 text-base-content/70">
+            <p class="flex-auto">
+              Phoenix標準の認証システムで、安全にデータを管理。マルチテナント対応で、他のユーザーのデータとは完全に分離されます。
+            </p>
+          </dd>
+        </div>
+        
+        <div class="flex flex-col">
+          <dt class="text-base font-semibold leading-7">
+            <div class="mb-6 flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+              <svg class="h-6 w-6 text-primary-content" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+              </svg>
+            </div>
+            高速レスポンス
+          </dt>
+          <dd class="mt-1 flex flex-auto flex-col text-base leading-7 text-base-content/70">
+            <p class="flex-auto">
+              ElixirとErlang VMの力で、大量のリクエストも軽快に処理。ストレスフリーな操作感を実現します。
+            </p>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<!-- CTA Section -->
+<div class="relative isolate mt-32 px-6 py-32 sm:mt-56 sm:py-40 lg:px-8">
+  <div class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10"></div>
+  </div>
+  <div class="mx-auto max-w-2xl text-center">
+    <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+      今すぐ始めよう
+    </h2>
+    <p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-base-content/70">
+      無料で始められます。クレジットカードは不要です。
+    </p>
+    <div class="mt-10 flex items-center justify-center gap-x-6">
+      <%= if @current_scope do %>
+        <a href="/todos" class="btn btn-primary btn-lg">
+          Todoリストを開く
+        </a>
+      <% else %>
+        <a href="/users/register" class="btn btn-primary btn-lg">
+          無料アカウント作成
+        </a>
+        <a href="/users/log-in" class="btn btn-ghost btn-lg">
+          ログイン <span aria-hidden="true">→</span>
+        </a>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,179 @@
+<div class="min-h-screen bg-base-100">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        タスク管理
+      </h1>
+      <p class="text-base-content/60 mt-2">効率的にタスクを管理しましょう</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Sidebar -->
+      <div class="lg:col-span-1">
+        <!-- Add Todo Form -->
+        <div class="card bg-base-200 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title text-lg">新しいタスク</h2>
+            
+            <.form for={@form} phx-submit="add_todo" class="space-y-4">
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">タイトル</span>
+                </label>
+                <input 
+                  type="text"
+                  name="todo[title]"
+                  value={@form[:title].value}
+                  placeholder="タスクのタイトルを入力"
+                  class="input input-bordered w-full"
+                  required
+                />
+              </div>
+              
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">説明（任意）</span>
+                </label>
+                <textarea 
+                  name="todo[description]"
+                  value={@form[:description].value}
+                  placeholder="詳細な説明を追加"
+                  class="textarea textarea-bordered h-24"
+                  rows="3"
+                ></textarea>
+              </div>
+              
+              <button type="submit" class="btn btn-primary w-full">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                タスクを追加
+              </button>
+            </.form>
+          </div>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="card bg-base-200 shadow-xl mt-6">
+          <div class="card-body">
+            <h2 class="card-title text-lg">統計</h2>
+            <div class="stats stats-vertical shadow">
+              <div class="stat">
+                <div class="stat-figure text-primary">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                  </svg>
+                </div>
+                <div class="stat-title">全タスク</div>
+                <div class="stat-value text-primary"><%= length(@todos) %></div>
+              </div>
+              
+              <div class="stat">
+                <div class="stat-figure text-success">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div class="stat-title">完了</div>
+                <div class="stat-value text-success"><%= Enum.count(@todos, & &1.completed) %></div>
+              </div>
+              
+              <div class="stat">
+                <div class="stat-figure text-warning">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div class="stat-title">未完了</div>
+                <div class="stat-value text-warning"><%= length(@todos) - Enum.count(@todos, & &1.completed) %></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="lg:col-span-2">
+        <div class="card bg-base-200 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title text-lg mb-4">タスク一覧</h2>
+            
+            <%= if @todos == [] do %>
+              <!-- Empty State -->
+              <div class="text-center py-12">
+                <svg class="w-24 h-24 mx-auto text-base-content/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                </svg>
+                <h3 class="text-xl font-semibold text-base-content/60 mb-2">まだタスクがありません</h3>
+                <p class="text-base-content/40">左のフォームから最初のタスクを追加しましょう</p>
+              </div>
+            <% else %>
+              <!-- Todo List -->
+              <div class="space-y-3">
+                <%= for todo <- @todos do %>
+                  <div class={[
+                    "card bg-base-100 transition-all duration-200 hover:shadow-lg",
+                    todo.completed && "opacity-75"
+                  ]}>
+                    <div class="card-body p-4">
+                      <div class="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={todo.completed}
+                          phx-click="toggle_todo"
+                          phx-value-id={todo.id}
+                          class="checkbox checkbox-primary mt-1"
+                        />
+                        
+                        <div class="flex-1 min-w-0">
+                          <h3 class={[
+                            "font-semibold text-lg",
+                            todo.completed && "line-through text-base-content/50"
+                          ]}>
+                            <%= todo.title %>
+                          </h3>
+                          
+                          <%= if todo.description do %>
+                            <p class={[
+                              "text-base-content/60 mt-1",
+                              todo.completed && "line-through"
+                            ]}>
+                              <%= todo.description %>
+                            </p>
+                          <% end %>
+                          
+                          <div class="flex items-center gap-2 mt-2">
+                            <span class="badge badge-ghost badge-sm">
+                              <%= Calendar.strftime(todo.inserted_at, "%m/%d %H:%M") %>
+                            </span>
+                            <%= if todo.completed do %>
+                              <span class="badge badge-success badge-sm">完了</span>
+                            <% else %>
+                              <span class="badge badge-warning badge-sm">未完了</span>
+                            <% end %>
+                          </div>
+                        </div>
+                        
+                        <button
+                          phx-click="delete_todo"
+                          phx-value-id={todo.id}
+                          class="btn btn-ghost btn-sm btn-circle text-error"
+                          title="削除"
+                        >
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
