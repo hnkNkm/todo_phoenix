@@ -27,6 +27,7 @@ defmodule TodoAppWeb.Router do
     pipe_through [:browser, :require_authenticated_user]
     
     live "/todos", TodoLive, :index
+    live "/calendar", CalendarLive, :index
   end
 
   # Other scopes may use custom stacks.

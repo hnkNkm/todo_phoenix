@@ -1,0 +1,183 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="mb-6 flex justify-between items-center">
+    <h1 class="text-3xl font-bold">カレンダー</h1>
+    
+    <div class="flex gap-2">
+      <%= if @view_mode == :month do %>
+        <button phx-click="toggle_calendar" class="btn btn-outline">
+          <%= if @show_calendar do %>
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+            </svg>
+            カレンダーを隠す
+          <% else %>
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            カレンダーを表示
+          <% end %>
+        </button>
+        
+        <button phx-click="view_history" class="btn btn-secondary">
+          履歴を見る
+        </button>
+      <% else %>
+        <button phx-click="view_calendar" class="btn btn-secondary">
+          カレンダーに戻る
+        </button>
+      <% end %>
+      
+      <%= if length(@overdue_todos) > 0 do %>
+        <button phx-click="carry_over_todos" class="btn btn-warning">
+          未完了タスクを持ち越す (<%= length(@overdue_todos) %>件)
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <%= if @view_mode == :month do %>
+    <!-- カレンダービュー -->
+    <%= if @show_calendar do %>
+    <div class="bg-base-100 rounded-lg shadow-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+        <button phx-click="prev_month" class="btn btn-circle btn-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        <h2 class="text-xl font-semibold"><%= format_month(@current_date) %></h2>
+        
+        <button phx-click="next_month" class="btn btn-circle btn-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <button phx-click="today" class="btn btn-primary btn-sm mb-4">
+        今日
+      </button>
+
+      <div class="grid grid-cols-7 gap-1">
+        <!-- 曜日ヘッダー -->
+        <div class="text-center font-semibold p-2">月</div>
+        <div class="text-center font-semibold p-2">火</div>
+        <div class="text-center font-semibold p-2">水</div>
+        <div class="text-center font-semibold p-2">木</div>
+        <div class="text-center font-semibold p-2">金</div>
+        <div class="text-center font-semibold p-2 text-blue-600">土</div>
+        <div class="text-center font-semibold p-2 text-red-600">日</div>
+
+        <!-- カレンダーの日付 -->
+        <%= for date <- calendar_days(@current_date) do %>
+          <% is_current_month = date.month == @current_date.month %>
+          <% is_today = date == Date.utc_today() %>
+          <% is_selected = date == @selected_date %>
+          <% todo_count = get_todo_count_for_date(@todos_by_date, date) %>
+          <% completed_count = get_completed_count_for_date(@todos_by_date, date) %>
+          
+          <button
+            phx-click="select_date"
+            phx-value-date={Date.to_iso8601(date)}
+            class={"
+              relative min-h-[80px] p-2 border rounded-lg transition-all
+              #{if is_current_month, do: "hover:bg-base-200", else: "opacity-40"}
+              #{if is_today, do: "ring-2 ring-primary"}
+              #{if is_selected, do: "bg-primary text-primary-content"}
+            "}
+          >
+            <div class="text-sm font-medium mb-1">
+              <%= date.day %>
+            </div>
+            
+            <%= if todo_count > 0 do %>
+              <div class="text-xs">
+                <span class={"badge badge-sm #{if completed_count == todo_count, do: "badge-success", else: "badge-warning"}"}>
+                  <%= completed_count %>/<%= todo_count %>
+                </span>
+              </div>
+            <% end %>
+          </button>
+        <% end %>
+      </div>
+    </div>
+    <% end %>
+
+    <!-- 選択された日付のタスク -->
+    <div class="mt-6 bg-base-100 rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-semibold mb-4">
+        <%= format_date(@selected_date) %>のタスク
+      </h3>
+      
+      <%= if length(@selected_date_todos) == 0 do %>
+        <p class="text-base-content/60">この日のタスクはありません</p>
+      <% else %>
+        <div class="space-y-2">
+          <%= for todo <- @selected_date_todos do %>
+            <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                phx-click="toggle_todo"
+                phx-value-id={todo.id}
+                class="checkbox checkbox-primary"
+              />
+              
+              <div class="flex-1">
+                <div class={"#{if todo.completed, do: "line-through opacity-60"}"}>
+                  <div class="font-medium"><%= todo.title %></div>
+                  <%= if todo.description do %>
+                    <div class="text-sm text-base-content/60"><%= todo.description %></div>
+                  <% end %>
+                  <%= if todo.carry_over_count > 0 do %>
+                    <div class="text-xs text-warning">
+                      <%= todo.carried_over_from %>から持ち越し（<%= todo.carry_over_count %>回目）
+                    </div>
+                  <% end %>
+                  <%= if todo.is_recurring do %>
+                    <div class="text-xs text-info">
+                      繰り返し: <%= todo.recurrence_pattern %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- 履歴ビュー -->
+    <div class="bg-base-100 rounded-lg shadow-lg p-6">
+      <h2 class="text-xl font-semibold mb-4">完了履歴</h2>
+      
+      <%= if length(@completed_history) == 0 do %>
+        <p class="text-base-content/60">完了したタスクはありません</p>
+      <% else %>
+        <div class="space-y-2">
+          <%= for todo <- @completed_history do %>
+            <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+              <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              
+              <div class="flex-1">
+                <div class="font-medium"><%= todo.title %></div>
+                <%= if todo.description do %>
+                  <div class="text-sm text-base-content/60"><%= todo.description %></div>
+                <% end %>
+                <div class="text-xs text-base-content/60">
+                  完了: <%= Calendar.strftime(todo.completed_at, "%Y年%m月%d日 %H:%M") %>
+                  <%= if todo.due_date do %>
+                    （期限: <%= format_date(todo.due_date) %>）
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

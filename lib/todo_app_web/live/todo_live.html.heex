@@ -7,6 +7,29 @@
       </h1>
       <p class="text-base-content/60 mt-2">効率的にタスクを管理しましょう</p>
     </div>
+    
+    <!-- 日付セレクター -->
+    <div class="card bg-base-200 shadow-xl mb-6">
+      <div class="card-body p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <h2 class="text-lg font-semibold">
+              <%= Calendar.strftime(@selected_date, "%Y年%m月%d日") %>のタスク
+            </h2>
+            <%= if @selected_date == Date.utc_today() do %>
+              <span class="badge badge-primary">今日</span>
+            <% end %>
+          </div>
+          <input 
+            type="date"
+            value={Date.to_iso8601(@selected_date)}
+            phx-change="select_date"
+            name="date"
+            class="input input-bordered"
+          />
+        </div>
+      </div>
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Sidebar -->
@@ -43,6 +66,47 @@
                   rows="3"
                 ></textarea>
               </div>
+              
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">期限日（任意）</span>
+                </label>
+                <input 
+                  type="date"
+                  name="todo[due_date]"
+                  value={@form[:due_date].value}
+                  class="input input-bordered w-full"
+                />
+              </div>
+              
+              <div class="form-control">
+                <label class="label cursor-pointer">
+                  <span class="label-text">繰り返し設定</span>
+                  <input 
+                    type="checkbox"
+                    name="todo[is_recurring]"
+                    checked={@form[:is_recurring].value}
+                    class="checkbox checkbox-primary"
+                  />
+                </label>
+              </div>
+              
+              <%= if @form[:is_recurring].value do %>
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">繰り返しパターン</span>
+                  </label>
+                  <select 
+                    name="todo[recurrence_pattern]"
+                    class="select select-bordered w-full"
+                  >
+                    <option value="">選択してください</option>
+                    <option value="daily">毎日</option>
+                    <option value="weekly">毎週</option>
+                    <option value="monthly">毎月</option>
+                  </select>
+                </div>
+              <% end %>
               
               <button type="submit" class="btn btn-primary w-full">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,8 +169,10 @@
                 <svg class="w-24 h-24 mx-auto text-base-content/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                 </svg>
-                <h3 class="text-xl font-semibold text-base-content/60 mb-2">まだタスクがありません</h3>
-                <p class="text-base-content/40">左のフォームから最初のタスクを追加しましょう</p>
+                <h3 class="text-xl font-semibold text-base-content/60 mb-2">
+                  <%= Calendar.strftime(@selected_date, "%m月%d日") %>にタスクがありません
+                </h3>
+                <p class="text-base-content/40">左のフォームからタスクを追加しましょう</p>
               </div>
             <% else %>
               <!-- Todo List -->
@@ -147,6 +213,16 @@
                             <span class="badge badge-ghost badge-sm">
                               <%= Calendar.strftime(todo.inserted_at, "%m/%d %H:%M") %>
                             </span>
+                            <%= if todo.due_date do %>
+                              <span class="badge badge-info badge-sm">
+                                期限: <%= Calendar.strftime(todo.due_date, "%m/%d") %>
+                              </span>
+                            <% end %>
+                            <%= if todo.is_recurring do %>
+                              <span class="badge badge-secondary badge-sm">
+                                繰り返し
+                              </span>
+                            <% end %>
                             <%= if todo.completed do %>
                               <span class="badge badge-success badge-sm">完了</span>
                             <% else %>
