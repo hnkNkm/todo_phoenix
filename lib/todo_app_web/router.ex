@@ -28,6 +28,7 @@ defmodule TodoAppWeb.Router do
     
     live "/todos", TodoLive, :index
     live "/calendar", CalendarLive, :index
+    live "/tags", TagLive, :index
   end
 
   # Other scopes may use custom stacks.

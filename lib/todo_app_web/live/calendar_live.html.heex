@@ -36,6 +36,82 @@
   </div>
 
   <%= if @view_mode == :month do %>
+    <!-- 検索・フィルター -->
+    <div class="card bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+      <div class="space-y-4">
+        <!-- 検索バー -->
+        <div class="form-control">
+          <div class="input-group">
+            <input 
+              type="text"
+              placeholder="タスクを検索..."
+              value={@search_query}
+              phx-keyup="search"
+              phx-debounce="300"
+              name="search"
+              class="input input-bordered flex-1"
+            />
+            <button class="btn btn-square">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ステータスフィルター -->
+        <div class="flex gap-2">
+          <button 
+            phx-click="filter_status" 
+            phx-value-status="all"
+            class={"btn btn-sm #{if @filter_status == "all", do: "btn-primary", else: "btn-outline"}"}
+          >
+            すべて
+          </button>
+          <button 
+            phx-click="filter_status" 
+            phx-value-status="incomplete"
+            class={"btn btn-sm #{if @filter_status == "incomplete", do: "btn-primary", else: "btn-outline"}"}
+          >
+            未完了
+          </button>
+          <button 
+            phx-click="filter_status" 
+            phx-value-status="completed"
+            class={"btn btn-sm #{if @filter_status == "completed", do: "btn-primary", else: "btn-outline"}"}
+          >
+            完了済み
+          </button>
+        </div>
+
+        <!-- タグフィルター -->
+        <%= if length(@available_tags) > 0 do %>
+          <div class="space-y-2">
+            <div class="text-sm font-medium">タグでフィルター:</div>
+            <div class="flex flex-wrap gap-2">
+              <%= for tag <- @available_tags do %>
+                <button 
+                  phx-click="toggle_tag"
+                  phx-value-tag_id={tag.id}
+                  class={"badge #{if tag.id in @selected_tag_ids, do: "badge-primary", else: "badge-outline"}"}
+                  style={"#{if tag.id in @selected_tag_ids, do: "background-color: #{tag.color};", else: "color: #{tag.color};"}"}
+                >
+                  <%= tag.name %>
+                </button>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- フィルタークリア -->
+        <%= if @search_query != "" or @filter_status != "all" or length(@selected_tag_ids) > 0 do %>
+          <button phx-click="clear_filters" class="btn btn-sm btn-ghost">
+            フィルターをクリア
+          </button>
+        <% end %>
+      </div>
+    </div>
+
     <!-- カレンダービュー -->
     <%= if @show_calendar do %>
     <div class="bg-base-100 rounded-lg shadow-lg p-6">
@@ -141,6 +217,19 @@
                     </div>
                   <% end %>
                 </div>
+                
+                <%= if todo.tags && length(todo.tags) > 0 do %>
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    <%= for tag <- todo.tags do %>
+                      <span 
+                        class="badge badge-xs"
+                        style={"background-color: #{tag.color}; color: white;"}
+                      >
+                        <%= tag.name %>
+                      </span>
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
             </div>
           <% end %>

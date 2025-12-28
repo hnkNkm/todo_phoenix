@@ -15,6 +15,10 @@ defmodule TodoApp.Todos.Todo do
     
     belongs_to :user, TodoApp.Accounts.User
     belongs_to :workspace, TodoApp.Organizations.Workspace
+    many_to_many :tags, TodoApp.Tags.Tag, 
+      join_through: "todos_tags",
+      on_replace: :delete,
+      on_delete: :delete_all
 
     timestamps(type: :utc_datetime)
   end

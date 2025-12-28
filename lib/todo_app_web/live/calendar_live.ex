@@ -25,6 +25,10 @@ defmodule TodoAppWeb.CalendarLive do
      |> assign(:selected_date, today)
      |> assign(:view_mode, :month)
      |> assign(:show_calendar, true)
+     |> assign(:search_query, "")
+     |> assign(:filter_status, "all")
+     |> assign(:selected_tag_ids, [])
+     |> assign(:available_tags, if(current_user, do: TodoApp.Tags.list_user_tags(current_user.id), else: []))
      |> load_calendar_data()}
   end
 
@@ -117,6 +121,48 @@ defmodule TodoAppWeb.CalendarLive do
   end
 
   @impl true
+  def handle_event("search", %{"search" => search_query}, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_query, search_query)
+     |> load_calendar_data()}
+  end
+
+  @impl true
+  def handle_event("filter_status", %{"status" => status}, socket) do
+    {:noreply,
+     socket
+     |> assign(:filter_status, status)
+     |> load_calendar_data()}
+  end
+
+  @impl true
+  def handle_event("toggle_tag", %{"tag_id" => tag_id}, socket) do
+    tag_id = String.to_integer(tag_id)
+    selected_tag_ids = 
+      if tag_id in socket.assigns.selected_tag_ids do
+        List.delete(socket.assigns.selected_tag_ids, tag_id)
+      else
+        [tag_id | socket.assigns.selected_tag_ids]
+      end
+    
+    {:noreply,
+     socket
+     |> assign(:selected_tag_ids, selected_tag_ids)
+     |> load_calendar_data()}
+  end
+
+  @impl true
+  def handle_event("clear_filters", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_query, "")
+     |> assign(:filter_status, "all")
+     |> assign(:selected_tag_ids, [])
+     |> load_calendar_data()}
+  end
+
+  @impl true
   def handle_info({:todo_created, _todo}, socket) do
     {:noreply, load_calendar_data(socket)}
   end
@@ -136,11 +182,18 @@ defmodule TodoAppWeb.CalendarLive do
       start_date = Date.beginning_of_month(socket.assigns.current_date)
       end_date = Date.end_of_month(socket.assigns.current_date)
       
-      todos_by_date = 
-        Todos.list_todos_by_date_range(socket.assigns.current_user.id, start_date, end_date)
-        |> Enum.group_by(& &1.due_date)
+      # フィルターを構築
+      filters = build_date_range_filters(socket, start_date, end_date)
       
-      overdue_todos = Todos.list_overdue_todos(socket.assigns.current_user.id)
+      # フィルタリングされたタスクを取得
+      all_todos = Todos.filter_todos(socket.assigns.current_user.id, filters)
+      
+      # 日付ごとにグループ化
+      todos_by_date = Enum.group_by(all_todos, & &1.due_date)
+      
+      # 期限切れタスクもフィルタリング
+      overdue_filters = build_overdue_filters(socket)
+      overdue_todos = Todos.filter_todos(socket.assigns.current_user.id, overdue_filters)
       
       completed_history = 
         if socket.assigns.view_mode == :history do
@@ -165,11 +218,87 @@ defmodule TodoAppWeb.CalendarLive do
 
   defp load_selected_date_todos(socket) do
     if socket.assigns.current_user do
-      todos = Todos.list_todos_by_date(socket.assigns.current_user.id, socket.assigns.selected_date)
+      filters = build_filters(socket, socket.assigns.selected_date)
+      todos = Todos.filter_todos(socket.assigns.current_user.id, filters)
       assign(socket, :selected_date_todos, todos)
     else
       assign(socket, :selected_date_todos, [])
     end
+  end
+
+  defp build_filters(socket, date) do
+    filters = [{:date, date}]
+    
+    filters = 
+      if socket.assigns.search_query != "" do
+        [{:search, socket.assigns.search_query} | filters]
+      else
+        filters
+      end
+    
+    filters = 
+      case socket.assigns.filter_status do
+        "completed" -> [{:status, "completed"} | filters]
+        "incomplete" -> [{:status, "incomplete"} | filters]
+        _ -> filters
+      end
+    
+    filters = 
+      if socket.assigns.selected_tag_ids != [] do
+        [{:tag_ids, socket.assigns.selected_tag_ids} | filters]
+      else
+        filters
+      end
+    
+    filters
+  end
+
+  defp build_date_range_filters(socket, start_date, end_date) do
+    filters = [{:date_range, {start_date, end_date}}]
+    
+    filters = 
+      if socket.assigns.search_query != "" do
+        [{:search, socket.assigns.search_query} | filters]
+      else
+        filters
+      end
+    
+    filters = 
+      case socket.assigns.filter_status do
+        "completed" -> [{:status, "completed"} | filters]
+        "incomplete" -> [{:status, "incomplete"} | filters]
+        _ -> filters
+      end
+    
+    filters = 
+      if socket.assigns.selected_tag_ids != [] do
+        [{:tag_ids, socket.assigns.selected_tag_ids} | filters]
+      else
+        filters
+      end
+    
+    filters
+  end
+
+  defp build_overdue_filters(socket) do
+    today = Date.utc_today()
+    filters = [{:overdue, today}]
+    
+    filters = 
+      if socket.assigns.search_query != "" do
+        [{:search, socket.assigns.search_query} | filters]
+      else
+        filters
+      end
+    
+    filters = 
+      if socket.assigns.selected_tag_ids != [] do
+        [{:tag_ids, socket.assigns.selected_tag_ids} | filters]
+      else
+        filters
+      end
+    
+    filters
   end
 
   defp calendar_days(date) do

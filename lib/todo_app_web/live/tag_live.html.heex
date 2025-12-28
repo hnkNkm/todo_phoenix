@@ -1,0 +1,120 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold">タグ管理</h1>
+    <p class="text-base-content/60 mt-2">タスクを整理するためのタグを管理します</p>
+  </div>
+
+  <!-- タグ作成/編集フォーム -->
+  <div class="card bg-base-200 shadow-xl mb-6">
+    <div class="card-body">
+      <h2 class="card-title">
+        <%= if @editing_tag do %>
+          タグを編集
+        <% else %>
+          新しいタグ
+        <% end %>
+      </h2>
+      
+      <.form 
+        for={@form} 
+        phx-submit={if @editing_tag, do: "update_tag", else: "create_tag"}
+        class="space-y-4"
+      >
+        <div class="flex gap-4">
+          <div class="form-control flex-1">
+            <label class="label">
+              <span class="label-text">タグ名</span>
+            </label>
+            <input 
+              type="text"
+              name="tag[name]"
+              value={@form[:name].value}
+              placeholder="タグ名を入力"
+              class="input input-bordered"
+              required
+            />
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">カラー</span>
+            </label>
+            <input 
+              type="color"
+              name="tag[color]"
+              value={@form[:color].value || "#6366f1"}
+              class="input input-bordered h-12 w-20 p-1"
+            />
+          </div>
+        </div>
+        
+        <div class="flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <%= if @editing_tag do %>
+              更新
+            <% else %>
+              作成
+            <% end %>
+          </button>
+          
+          <%= if @editing_tag do %>
+            <button type="button" phx-click="cancel_edit" class="btn btn-ghost">
+              キャンセル
+            </button>
+          <% end %>
+        </div>
+      </.form>
+    </div>
+  </div>
+
+  <!-- タグ一覧 -->
+  <div class="card bg-base-200 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title mb-4">タグ一覧</h2>
+      
+      <%= if @tags == [] do %>
+        <div class="text-center py-8">
+          <p class="text-base-content/60">まだタグがありません</p>
+          <p class="text-base-content/40 text-sm mt-2">上のフォームから最初のタグを作成しましょう</p>
+        </div>
+      <% else %>
+        <div class="space-y-2">
+          <%= for tag <- @tags do %>
+            <div class="flex items-center justify-between p-3 bg-base-100 rounded-lg">
+              <div class="flex items-center gap-3">
+                <div 
+                  class="w-6 h-6 rounded-full"
+                  style={"background-color: #{tag.color}"}
+                ></div>
+                <span class="font-medium"><%= tag.name %></span>
+              </div>
+              
+              <div class="flex gap-2">
+                <button 
+                  phx-click="edit_tag"
+                  phx-value-id={tag.id}
+                  class="btn btn-ghost btn-sm"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                
+                <button 
+                  phx-click="delete_tag"
+                  phx-value-id={tag.id}
+                  class="btn btn-ghost btn-sm text-error"
+                  onclick="return confirm('このタグを削除してもよろしいですか？')"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

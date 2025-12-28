@@ -31,6 +31,84 @@
       </div>
     </div>
 
+    <!-- 検索・フィルター -->
+    <div class="card bg-base-200 shadow-xl mb-6">
+      <div class="card-body p-4">
+        <div class="space-y-4">
+          <!-- 検索バー -->
+          <div class="form-control">
+            <div class="input-group">
+              <input 
+                type="text"
+                placeholder="タスクを検索..."
+                value={@search_query}
+                phx-keyup="search"
+                phx-debounce="300"
+                name="search"
+                class="input input-bordered flex-1"
+              />
+              <button class="btn btn-square">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- ステータスフィルター -->
+          <div class="flex gap-2">
+            <button 
+              phx-click="filter_status" 
+              phx-value-status="all"
+              class={"btn btn-sm #{if @filter_status == "all", do: "btn-primary", else: "btn-outline"}"}
+            >
+              すべて
+            </button>
+            <button 
+              phx-click="filter_status" 
+              phx-value-status="incomplete"
+              class={"btn btn-sm #{if @filter_status == "incomplete", do: "btn-primary", else: "btn-outline"}"}
+            >
+              未完了
+            </button>
+            <button 
+              phx-click="filter_status" 
+              phx-value-status="completed"
+              class={"btn btn-sm #{if @filter_status == "completed", do: "btn-primary", else: "btn-outline"}"}
+            >
+              完了済み
+            </button>
+          </div>
+
+          <!-- タグフィルター -->
+          <%= if length(@available_tags) > 0 do %>
+            <div class="space-y-2">
+              <div class="text-sm font-medium">タグでフィルター:</div>
+              <div class="flex flex-wrap gap-2">
+                <%= for tag <- @available_tags do %>
+                  <button 
+                    phx-click="toggle_tag"
+                    phx-value-tag_id={tag.id}
+                    class={"badge #{if tag.id in @selected_tag_ids, do: "badge-primary", else: "badge-outline"}"}
+                    style={"#{if tag.id in @selected_tag_ids, do: "background-color: #{tag.color};", else: "color: #{tag.color};"}"}
+                  >
+                    <%= tag.name %>
+                  </button>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- フィルタークリア -->
+          <%= if @search_query != "" or @filter_status != "all" or length(@selected_tag_ids) > 0 do %>
+            <button phx-click="clear_filters" class="btn btn-sm btn-ghost">
+              フィルターをクリア
+            </button>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Sidebar -->
       <div class="lg:col-span-1">
@@ -105,6 +183,33 @@
                     <option value="weekly">毎週</option>
                     <option value="monthly">毎月</option>
                   </select>
+                </div>
+              <% end %>
+              
+              <!-- タグ選択 -->
+              <%= if length(@available_tags) > 0 do %>
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">タグ（複数選択可）</span>
+                  </label>
+                  <div class="flex flex-wrap gap-2 p-2 border border-base-300 rounded-lg">
+                    <%= for tag <- @available_tags do %>
+                      <label class="cursor-pointer">
+                        <input 
+                          type="checkbox"
+                          name="todo[tag_ids][]"
+                          value={tag.id}
+                          class="checkbox checkbox-sm mr-1"
+                        />
+                        <span 
+                          class="badge badge-lg cursor-pointer hover:opacity-80"
+                          style={"background-color: #{tag.color}; color: white;"}
+                        >
+                          <%= tag.name %>
+                        </span>
+                      </label>
+                    <% end %>
+                  </div>
                 </div>
               <% end %>
               
@@ -229,6 +334,19 @@
                               <span class="badge badge-warning badge-sm">未完了</span>
                             <% end %>
                           </div>
+                          
+                          <%= if todo.tags && length(todo.tags) > 0 do %>
+                            <div class="flex flex-wrap gap-1 mt-2">
+                              <%= for tag <- todo.tags do %>
+                                <span 
+                                  class="badge badge-sm"
+                                  style={"background-color: #{tag.color}; color: white;"}
+                                >
+                                  <%= tag.name %>
+                                </span>
+                              <% end %>
+                            </div>
+                          <% end %>
                         </div>
                         
                         <button

@@ -25,6 +25,7 @@ defmodule TodoApp.Todos do
     |> where(user_id: ^user_id)
     |> order_by([desc: :inserted_at])
     |> Repo.all()
+    |> Repo.preload(:tags)
   end
 
   @doc """
@@ -35,6 +36,7 @@ defmodule TodoApp.Todos do
     |> where(user_id: ^user_id, due_date: ^date)
     |> order_by([asc: :inserted_at])
     |> Repo.all()
+    |> Repo.preload(:tags)
   end
 
   @doc """
@@ -46,6 +48,7 @@ defmodule TodoApp.Todos do
     |> where([t], t.due_date >= ^start_date and t.due_date <= ^end_date)
     |> order_by([asc: :due_date, asc: :inserted_at])
     |> Repo.all()
+    |> Repo.preload(:tags)
   end
 
   @doc """
@@ -136,6 +139,58 @@ defmodule TodoApp.Todos do
     Todo
     |> where(user_id: ^user_id, id: ^id)
     |> Repo.one!()
+    |> Repo.preload(:tags)
+  end
+
+  @doc """
+  Searches todos by keyword.
+  """
+  def search_todos(user_id, query) do
+    search_term = "%#{query}%"
+    
+    Todo
+    |> where(user_id: ^user_id)
+    |> where([t], ilike(t.title, ^search_term) or ilike(t.description, ^search_term))
+    |> order_by([desc: :inserted_at])
+    |> Repo.all()
+    |> Repo.preload(:tags)
+  end
+
+  @doc """
+  Filters todos by various criteria.
+  """
+  def filter_todos(user_id, filters) do
+    Todo
+    |> where(user_id: ^user_id)
+    |> apply_filters(filters)
+    |> order_by([desc: :inserted_at])
+    |> Repo.all()
+    |> Repo.preload(:tags)
+  end
+
+  defp apply_filters(query, filters) do
+    Enum.reduce(filters, query, fn
+      {:status, "completed"}, query ->
+        where(query, [t], t.completed == true)
+      {:status, "incomplete"}, query ->
+        where(query, [t], t.completed == false)
+      {:date, date}, query ->
+        where(query, [t], t.due_date == ^date)
+      {:date_range, {start_date, end_date}}, query ->
+        where(query, [t], t.due_date >= ^start_date and t.due_date <= ^end_date)
+      {:overdue, today}, query ->
+        where(query, [t], t.due_date < ^today and t.completed == false)
+      {:tag_ids, tag_ids}, query when is_list(tag_ids) and length(tag_ids) > 0 ->
+        from t in query,
+          join: tt in "todos_tags", on: tt.todo_id == t.id,
+          where: tt.tag_id in ^tag_ids,
+          group_by: t.id
+      {:search, search_term}, query when is_binary(search_term) and search_term != "" ->
+        search = "%#{search_term}%"
+        where(query, [t], ilike(t.title, ^search) or ilike(t.description, ^search))
+      _, query ->
+        query
+    end)
   end
 
   @doc """
@@ -145,7 +200,14 @@ defmodule TodoApp.Todos do
     %Todo{}
     |> Todo.changeset(attrs)
     |> Repo.insert()
-    |> broadcast(:todo_created)
+    |> case do
+      {:ok, todo} ->
+        todo = Repo.preload(todo, :tags)
+        {:ok, todo} = attach_tags(todo, Map.get(attrs, "tag_ids", []))
+        broadcast({:ok, todo}, :todo_created)
+      error ->
+        error
+    end
   end
 
   @doc """
@@ -155,8 +217,44 @@ defmodule TodoApp.Todos do
     todo
     |> Todo.changeset(attrs)
     |> Repo.update()
-    |> broadcast(:todo_updated)
+    |> case do
+      {:ok, todo} ->
+        todo = Repo.preload(todo, :tags)
+        {:ok, todo} = attach_tags(todo, Map.get(attrs, "tag_ids", []))
+        broadcast({:ok, todo}, :todo_updated)
+      error ->
+        error
+    end
   end
+
+  @doc """
+  Attaches tags to a todo.
+  """
+  def attach_tags(%Todo{} = todo, tag_ids) when is_list(tag_ids) do
+    # 既存のタグ関連を削除
+    Repo.delete_all(from tt in "todos_tags", where: tt.todo_id == ^todo.id)
+    
+    # 新しいタグ関連を追加
+    if length(tag_ids) > 0 do
+      now = DateTime.utc_now(:second)
+      entries = Enum.map(tag_ids, fn tag_id ->
+        # Convert string IDs to integers if necessary
+        tag_id_int = if is_binary(tag_id), do: String.to_integer(tag_id), else: tag_id
+        %{
+          todo_id: todo.id,
+          tag_id: tag_id_int,
+          inserted_at: now
+        }
+      end)
+      
+      Repo.insert_all("todos_tags", entries)
+    end
+    
+    # タグを再読み込みして返す
+    {:ok, Repo.preload(todo, :tags, force: true)}
+  end
+
+  def attach_tags(todo, _), do: {:ok, todo}
 
   @doc """
   Deletes a todo.
