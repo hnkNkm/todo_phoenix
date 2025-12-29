@@ -1,0 +1,65 @@
+# Backend (Phoenix/Elixir)
+backend/_build/
+backend/deps/
+backend/*.ez
+backend/*.beam
+backend/priv/plts/
+backend/.elixir_ls/
+backend/.fetch
+backend/erl_crash.dump
+backend/priv/static/assets/
+backend/priv/static/cache_manifest.json
+backend/.phoenix.swoosh/
+backend/cover/
+backend/.postgres/
+backend/tmp/
+
+# Frontend (React/Node)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/.vscode/
+frontend/.idea/
+frontend/*.suo
+frontend/*.ntvs*
+frontend/*.njsproj
+frontend/*.sln
+frontend/*.sw?
+
+# Environment files
+.env
+.env.local
+.env.production
+.envrc
+
+# Nix
+.nix-hex/
+.nix-mix/
+.direnv/
+result
+result-*
+
+# Database
+.postgres/
+
+# macOS
+.DS_Store
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-workspace

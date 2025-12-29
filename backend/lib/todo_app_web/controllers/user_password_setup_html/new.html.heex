@@ -1,0 +1,19 @@
+<div class="mx-auto max-w-md">
+  <div class="text-center">
+    <.header>
+      パスワードを設定してください
+      <:subtitle>
+        アカウントを保護するためにパスワードを設定してください。
+      </:subtitle>
+    </.header>
+  </div>
+
+  <.form :let={f} for={@changeset} action={~p"/users/setup-password"} method="post">
+    <.input field={f[:password]} type="password" label="新しいパスワード" required />
+    <.input field={f[:password_confirmation]} type="password" label="パスワード（確認）" required />
+    
+    <.button phx-disable-with="設定中..." class="w-full">
+      パスワードを設定する
+    </.button>
+  </.form>
+</div>
